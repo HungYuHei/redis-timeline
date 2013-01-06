@@ -1,6 +1,8 @@
 module Timeline::Track
   extend ActiveSupport::Concern
 
+  GLOBAL_ITEM = :global_item
+
   module ClassMethods
     def track(name, options={})
       @name = name
@@ -126,10 +128,10 @@ module Timeline::Track
             activity_item[:object] = [last_item[:object], activity_item[:object]].flatten.uniq
           end
           # Remove last similar item, it will merge to new item
-          Timeline.redis.del last_item[:cache_key]
+          Timeline.redis.hdel GLOBAL_ITEM, last_item[:cache_key]
         end
       end
-      Timeline.redis.set activity_item[:cache_key], Timeline.encode(activity_item)
+      Timeline.redis.hset GLOBAL_ITEM, activity_item[:cache_key], Timeline.encode(activity_item)
     end
 
     def set_object(object)
