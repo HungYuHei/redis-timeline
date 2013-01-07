@@ -41,7 +41,7 @@ module Timeline::Track
           @extra_fields ||= nil
           @merge_similar = options[:merge_similar] == true ? true : false
           if options[:follower_ids]
-            @follower_ids = @actor.send(options[:follower_ids].to_sym)
+            @follower_ids = send(options[:follower_ids].to_sym)
           else
             @followers = @actor.send(options[:followers].to_sym)
           end
