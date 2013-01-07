@@ -10,7 +10,7 @@ ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ':me
 
 class Post < ActiveRecord::Base
   include Timeline::Track
-  track :new_post, :actor => :user
+  track :new_post, :actor => :user, :follower_ids => :follower_ids
 
   belongs_to :user
   has_many :comments
@@ -42,6 +42,10 @@ class User < ActiveRecord::Base
 
   has_many :posts
   has_many :comments
+
+  def follower_ids
+    []
+  end
 
   def to_s
     self.username

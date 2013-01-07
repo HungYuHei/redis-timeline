@@ -23,9 +23,9 @@ describe Timeline::Track do
       user.timeline.last.should be_kind_of(Timeline::Activity)
     end
 
-    it "cc's the actor's followers by default" do
+    it "cc's the actor's follower_ids by default" do
       follower = User.create(:username => "follower one")
-      User.any_instance.should_receive(:followers).and_return([follower])
+      User.any_instance.should_receive(:follower_ids).and_return([follower.id])
       post.save
       follower.timeline.last.verb.should == "new_post"
       follower.timeline.last.actor.id.should == user.id
