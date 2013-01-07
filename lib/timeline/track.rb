@@ -59,7 +59,8 @@ module Timeline::Track
         actor: object_content(@actor),
         #object: object_content(@object),
         target: object_content(@target),
-        created_at: Time.now
+        action: action,
+        created_at: created_at
       }
     end
 
