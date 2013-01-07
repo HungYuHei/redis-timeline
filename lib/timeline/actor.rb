@@ -8,10 +8,6 @@ module Timeline::Actor
       end
     end
 
-    def followers
-      []
-    end
-
     private
       def timeline_options(options)
         defaults = { list_name: "user:id:#{self.id}:activity", start: 0, end: 19 }
