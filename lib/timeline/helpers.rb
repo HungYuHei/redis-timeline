@@ -29,9 +29,11 @@ module Timeline
     def get_list(options={})
       keys = Timeline.redis.lrange options[:list_name], options[:start], options[:end]
       return [] if keys.blank?
+
       items = Timeline.redis.hmget(Timeline::Track::GLOBAL_ITEM, *keys)
-      items.delete(nil)
-      items
+      reasons = Timeline.redis.hmget(options[:reason_field], *keys)
+
+      items.zip reasons
     end
   end
 end

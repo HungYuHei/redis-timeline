@@ -82,14 +82,27 @@ module Timeline::Track
     end
 
     def add_activity_to_follower_ids(activity_item)
-      @actor_followers_ids.each { |id| add_activity_to_user(id, activity_item) }
-      @category_follower_ids.each { |id| add_activity_to_user(id, activity_item) }
-      @post_tags_follower_ids.each { |id| add_activity_to_user(id, activity_item) }
-      @music_type_genre_follower_ids.each { |id| add_activity_to_user(id, activity_item) }
+      @uniq_ids = @actor_followers_ids.clone
+
+      @uniq_ids.concat(@category_follower_ids)
+               .concat(@post_tags_follower_ids)
+               .concat(music_type_genre_follower_ids)
+
+      @uniq_ids.each { |id| add_activity_to_user(id, activity_item) }
+
+      # order is matter since the first one will be overwritten
+      @music_type_genre_follower_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_music_type_genre) }
+      @post_tags_follower_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_post_tag) }
+      @category_follower_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_post_category) }
+      @actor_followers_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_user) }
     end
 
     def add_activity_to_user(user_id, activity_item)
       redis_add "user:id:#{user_id}:activity", activity_item
+    end
+
+    def add_activity_reasonto_user(user_id, activity_item, reason)
+      Timeline.redis.hset "user:id:#{user_id}:reason", activity_item[:cache_key], reason
     end
 
     def add_mentions(activity_item)
