@@ -55,10 +55,10 @@ module Timeline::Track
     def activity(options={})
       {
         cache_key: "#{options[:verb]}_u#{@actor.id}_o#{@object.id}_#{Time.now.to_i}",
-        verb: options[:verb],
-        actor: options_for(@actor),
-        object: options_for(@object),
-        target: options_for(@target),
+        #verb: options[:verb],
+        actor: object_content(@actor),
+        #object: object_content(@object),
+        target: object_content(@target),
         created_at: Time.now
       }
     end
@@ -117,18 +117,6 @@ module Timeline::Track
       end
     end
 
-    def options_for(target)
-      if !target.nil?
-        {
-          id: target.id,
-          class: target.class.to_s,
-          display_name: target.to_s
-        }.merge(extra_fields_for(target))
-      else
-        nil
-      end
-    end
-
     def redis_add(list, activity_item)
       Timeline.redis.lpush list, activity_item[:cache_key]
     end
@@ -158,6 +146,37 @@ module Timeline::Track
         self
       else
         self
+      end
+    end
+
+    def object_content(obj)
+      case
+      when obj.is_a?(Post)
+        {
+          class: obj.class.to_s.downcase!,
+          id: obj.id.to_s,
+          title: obj.truncated_content,
+          tags: obj.tags,
+          comments_count: obj.comments_count,
+          like_count: obj.liker_ids.size,
+          created_at: obj.created_at,
+          user: { name: obj.user.name, uid: obj.user.uid }
+        }
+      when obj.is_a?(Music)
+        {
+          class: obj.class.to_s.downcase!,
+          id: obj.id.to_s,
+          name: obj.name
+        }
+      when obj.is_a?(User)
+        {
+          class: obj.class.to_s.downcase!,
+          id: obj.id.to_s,
+          name: obj.name,
+          uid: obj.uid
+        }
+      else
+        nil
       end
     end
 
