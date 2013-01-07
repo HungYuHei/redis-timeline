@@ -4,7 +4,6 @@ module Timeline::Track
   GLOBAL_ITEM = :global_item
 
   module ClassMethods
-    # followers and follower_ids are mutual exclusion, follower_ids is prior
     def track(name, options={})
       @name = name
       @callback = options.delete :on
@@ -13,17 +12,20 @@ module Timeline::Track
       @actor ||= :creator
       @object = options.delete :object
       @target = options.delete :target
-      @followers = options.delete :followers
-      @followers ||= :followers
-      @follower_ids = options.delete(:follower_ids)
+      @actor_followers_ids = options.delete(:actor_followers_ids)
+      @category_follower_ids = options.delete(:category_follower_ids)
+      @post_tags_follower_ids = options.delete(:post_tags_follower_ids)
+      @music_type_genre_follower_ids = options.delete(:music_type_genre_follower_ids)
       @mentionable = options.delete :mentionable
 
       method_name = "track_#{@name}_after_#{@callback}".to_sym
       define_activity_method method_name, actor: @actor,
                                           object: @object,
                                           target: @target,
-                                          follower_ids: @follower_ids,
-                                          followers: @followers,
+                                          actor_followers_ids: @actor_followers_ids,
+                                          post_tags_follower_ids: @post_tags_follower_ids,
+                                          category_follower_ids: @category_follower_ids,
+                                          music_type_genre_follower_ids: @music_type_genre_follower_ids,
                                           verb: name,
                                           merge_similar: options[:merge_similar],
                                           mentionable: @mentionable
@@ -40,11 +42,10 @@ module Timeline::Track
           @target = !options[:target].nil? ? send(options[:target].to_sym) : nil
           @extra_fields ||= nil
           @merge_similar = options[:merge_similar] == true ? true : false
-          if options[:follower_ids]
-            @follower_ids = send(options[:follower_ids].to_sym)
-          else
-            @followers = @actor.send(options[:followers].to_sym)
-          end
+          @actor_followers_ids = send(options[:actor_followers_ids].to_sym)
+          @category_follower_ids = send(options[:category_follower_ids].to_sym)
+          @post_tags_follower_ids = send(options[:post_tags_follower_ids].to_sym)
+          @music_type_genre_follower_ids = send(options[:music_type_genre_follower_ids].to_sym)
           @mentionable = options[:mentionable]
           add_activity(activity(verb: options[:verb]))
         end
@@ -67,14 +68,9 @@ module Timeline::Track
     def add_activity(activity_item)
       redis_store_item(activity_item)
       add_activity_by_global(activity_item)
-      add_activity_to_user(activity_item[:actor][:id], activity_item)
       add_activity_by_user(activity_item[:actor][:id], activity_item)
       add_mentions(activity_item)
-      if @follower_ids && @follower_ids.any?
-        add_activity_to_follower_ids(activity_item)
-      elsif @followers.is_a?(Array) && @followers.any?
-        add_activity_to_followers(activity_item)
-      end
+      add_activity_to_follower_ids(activity_item)
     end
 
     def add_activity_by_global(activity_item)
@@ -85,16 +81,15 @@ module Timeline::Track
       redis_add "user:id:#{user_id}:posts", activity_item
     end
 
+    def add_activity_to_follower_ids(activity_item)
+      @actor_followers_ids.each { |id| add_activity_to_user(id, activity_item) }
+      @category_follower_ids.each { |id| add_activity_to_user(id, activity_item) }
+      @post_tags_follower_ids.each { |id| add_activity_to_user(id, activity_item) }
+      @music_type_genre_follower_ids.each { |id| add_activity_to_user(id, activity_item) }
+    end
+
     def add_activity_to_user(user_id, activity_item)
       redis_add "user:id:#{user_id}:activity", activity_item
-    end
-
-    def add_activity_to_followers(activity_item)
-      @followers.each { |follower| add_activity_to_user(follower.id, activity_item) }
-    end
-
-    def add_activity_to_follower_ids(activity_item)
-      @follower_ids.each { |id| add_activity_to_user(id, activity_item) }
     end
 
     def add_mentions(activity_item)
