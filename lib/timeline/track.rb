@@ -76,12 +76,12 @@ module Timeline::Track
                .concat(@post_tags_follower_ids)
                .concat(music_type_genre_follower_ids)
 
-      @uniq_ids.each { |id| add_activity_to_user(id, activity_item) }
+      @uniq_ids.uniq.each { |id| add_activity_to_user(id, activity_item) }
 
       # order is matter since the first one will be overwritten
       @music_type_genre_follower_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_music_type_genre) }
-      @post_tags_follower_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_post_tag) }
       @category_follower_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_post_category) }
+      @post_tags_follower_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_post_tag) }
       @actor_followers_ids.each { |id| add_activity_reasonto_user(id, activity_item, :following_user) }
     end
 
@@ -150,27 +150,34 @@ module Timeline::Track
       case
       when obj.is_a?(Post)
         {
-          class: obj.class.to_s.downcase!,
+          type: obj.class.to_s.downcase!,
           id: obj.id.to_s,
-          title: obj.truncated_content,
+          title: obj.title,
+          content: obj.truncated_content,
           tags: obj.tags,
           comments_count: obj.comments_count,
           like_count: obj.liker_ids.size,
           created_at: obj.created_at,
+          first_original_image_url: obj.first_original_image_url,
           user: { name: obj.user.name, uid: obj.user.uid }
         }
       when obj.is_a?(Music)
         {
-          class: obj.class.to_s.downcase!,
+          type: obj.class.to_s.downcase!,
           id: obj.id.to_s,
-          name: obj.name
+          title: obj.name,
+          content: obj.description,
+          cover_url: obj.cover.url
         }
       when obj.is_a?(User)
         {
-          class: obj.class.to_s.downcase!,
+          type: obj.class.to_s.downcase!,
           id: obj.id.to_s,
           name: obj.name,
-          uid: obj.uid
+          uid: obj.uid,
+          avatar_url: obj.avatar.url,
+          weibo_name: obj.weibo_name,
+          douban_name: obj.douban_name
         }
       else
         nil
