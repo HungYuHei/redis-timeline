@@ -5,32 +5,20 @@ module Timeline::Track
 
   module ClassMethods
     def track(name, options={})
-      @name = name
-      @callback = options.delete :on
-      @callback ||= :create
-      @actor = options.delete :actor
-      @actor ||= :creator
-      @object = options.delete :object
-      @target = options.delete :target
-      @actor_followers_ids = options.delete(:actor_followers_ids)
-      @category_follower_ids = options.delete(:category_follower_ids)
-      @post_tags_follower_ids = options.delete(:post_tags_follower_ids)
-      @music_type_genre_follower_ids = options.delete(:music_type_genre_follower_ids)
-      @mentionable = options.delete :mentionable
-
-      method_name = "track_#{@name}_after_#{@callback}".to_sym
-      define_activity_method method_name, actor: @actor,
-                                          object: @object,
-                                          target: @target,
-                                          actor_followers_ids: @actor_followers_ids,
-                                          post_tags_follower_ids: @post_tags_follower_ids,
-                                          category_follower_ids: @category_follower_ids,
-                                          music_type_genre_follower_ids: @music_type_genre_follower_ids,
+      callback = options.delete(:on) || :create
+      method_name = "track_#{name}_after_#{callback}".to_sym
+      define_activity_method method_name, actor: options.delete(:actor),
+                                          object: options.delete(:object),
+                                          target: options.delete(:target),
+                                          actor_followers_ids: options.delete(:actor_followers_ids),
+                                          category_follower_ids: options.delete(:category_follower_ids),
+                                          post_tags_follower_ids: options.delete(:post_tags_follower_ids),
+                                          music_type_genre_follower_ids: options.delete(:music_type_genre_follower_ids),
                                           verb: name,
                                           merge_similar: options[:merge_similar],
-                                          mentionable: @mentionable
+                                          mentionable: options.delete(:mentionable)
 
-      send "after_#{@callback}".to_sym, method_name, if: options.delete(:if)
+      send "after_#{callback}".to_sym, method_name, if: options.delete(:if)
     end
 
     private
