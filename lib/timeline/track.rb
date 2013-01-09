@@ -86,7 +86,7 @@ module Timeline::Track
     end
 
     def add_activity_to_user(user_id, activity_item)
-      redis_add "user:id:#{user_id}:activity", activity_item
+      Timeline.redis.zadd "user:id:#{user_id}:activity", activity_item[:created_at].to_i, activity_item[:cache_key]
     end
 
     def add_activity_reasonto_user(user_id, activity_item, reason)

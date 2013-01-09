@@ -10,7 +10,7 @@ module Timeline::Actor
 
     private
       def timeline_options(options)
-        defaults = { list_name: "user:id:#{self.id}:activity", reason_field: "user:id:#{self.id}:reason", start: 0, end: 19 }
+        defaults = { list_name: "user:id:#{self.id}:activity", reason_field: "user:id:#{self.id}:reason", start: 0, end: 19, type: :activity }
         if options.is_a? Hash
           defaults.merge!(options)
         elsif options.is_a? Symbol
@@ -22,6 +22,7 @@ module Timeline::Actor
           when :mentions
             defaults.merge!(list_name: "user:id:#{self.id}:mentions")
           end
+          defaults.merge!(type: options)
         end
       end
   end
