@@ -18,6 +18,9 @@ module Timeline::Actor
         [Time.parse(i['created_at']).to_i, i['cache_key']]
       end
       Timeline.redis.zadd("user:id:#{id}:activity", items)
+
+      reasons = items.reduce([]) { |arr, item| arr << item[1] << 'following_user' }
+      Timeline.redis.hmset "user:id:#{id}:reason", *reasons
     end
 
     private
