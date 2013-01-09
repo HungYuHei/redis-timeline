@@ -34,7 +34,7 @@ module Timeline
       end
       return [] if keys.blank?
 
-      items = Timeline.redis.hmget(Timeline::Track::GLOBAL_ITEM, *keys)
+      items = Timeline.redis.hmget(Timeline::Track::GLOBAL_ACTIVITY, *keys)
       reasons = Timeline.redis.hmget(options[:reason_field], *keys)
 
       items.zip reasons

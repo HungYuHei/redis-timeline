@@ -13,7 +13,7 @@ module Timeline::Actor
     def sync_timeline(user, count = 10)
       keys = Timeline.redis.lrange "user:id:#{user.id}:posts", 0, count
       return if keys.empty?
-      items = Timeline.redis.hmget(Timeline::Track::GLOBAL_ITEM, *keys).map do |i|
+      items = Timeline.redis.hmget(Timeline::Track::GLOBAL_ACTIVITY, *keys).map do |i|
         i = Timeline.decode(i)
         [Time.parse(i['created_at']).to_i, i['cache_key']]
       end
