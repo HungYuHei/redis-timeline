@@ -1,3 +1,5 @@
+require 'time'
+
 module Timeline::Actor
   extend ActiveSupport::Concern
 
@@ -6,6 +8,16 @@ module Timeline::Actor
       Timeline.get_list(timeline_options(options)).map do |item|
         Timeline::Activity.new(Timeline.decode(item[0]).merge!({ reason: item[1] }))
       end
+    end
+
+    def sync_timeline(user, count = 10)
+      keys = Timeline.redis.lrange "user:id:#{user.id}:posts", 0, count
+      return if keys.empty?
+      items = Timeline.redis.hmget(Timeline::Track::GLOBAL_ITEM, *keys).map do |i|
+        i = Timeline.decode(i)
+        [Time.parse(i['created_at']).to_i, i['cache_key']]
+      end
+      Timeline.redis.zadd("user:id:#{id}:activity", items)
     end
 
     private
